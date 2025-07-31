@@ -2,13 +2,18 @@ import { useState } from "react";
 
 export default function Form({ onSubmit }) {
   const [url, setUrl] = useState('');
+  const [error, setError] = useState('');
 
   const handle = e => {
-    e.preventdefault();
+    e.preventDefault();
+    setError('');
 
     const match = url.match(/github\.com\/([^/]+\/[^/]+)/);
-    if (!match) return alert("Url inválida!")
-    onSubmit(match(1));
+    if (!match) {
+      setError('URL inválida. Use https://github.com/owner/repo');
+      return;
+    }
+    onSubmit(match[1]);
   };
 
   return (
@@ -21,6 +26,11 @@ export default function Form({ onSubmit }) {
         onChange={e => setUrl(e.target.value)}
       />
       <button className="bg-blue-600 text-white px-4 py-2 rounded">Gerar</button>
+      {error && (
+        <p className="text-red-600 text-sm">
+          {error}
+        </p>
+      )}
     </form>
   );
 }
