@@ -4,6 +4,8 @@ import Form from "./components/Form"
 import LanguageChart from "./components/LanguageChart"
 import StatsCard from "./components/StatsCard"
 import InsightsText from "./components/InsightsText"
+import Header from "./components/Header"
+import Footer from "./components/Footer"
 
 function App() {
   const [data, setData] = useState(null);
@@ -25,30 +27,34 @@ function App() {
 
   return (
     <>
-      <div className="max-w-3xl mx-auto p-6 space-y-6">
-        <h1 className="text-2xl font-bold">Dashboard de Insights Github</h1>
+      <Header />
+      <main className="min-h-[calc(100vh-8rem)] dark:bg-gray-900">
+        <div className="max-w-3xl mx-auto p-6 space-y-6">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard de Insights Github</h2>
 
-        <Form onSubmit={fetchInsights} />
+          <Form onSubmit={fetchInsights} />
 
-        {loading && (
-          <p className="text-gray-500">Carregando dados...</p>
-        )}
+          {loading && (
+            <p className="text-gray-500">Carregando dados...</p>
+          )}
 
-        {error && (
-          <p className="text-red-600">{error}</p>
-        )}
+          {error && (
+            <p className="text-red-600">{error}</p>
+          )}
 
-        {data && (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <StatsCard label="Commits na última semana" value={data.commits_last_week} />
-              <StatsCard label="Estrelas" value={data.stars} />
-            </div>
-            <LanguageChart data={data.top_languages} />
-            <InsightsText text={data.insights} />
-          </>
-        )}
-      </div>
+          {data && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <StatsCard label="Commits na última semana" value={data.commits_last_week} />
+                <StatsCard label="Estrelas" value={data.stars} />
+              </div>
+              <LanguageChart data={data.top_languages} />
+              <InsightsText text={data.insights} />
+            </>
+          )}
+        </div>
+      </main>
+      <Footer />
     </>
   )
 }
