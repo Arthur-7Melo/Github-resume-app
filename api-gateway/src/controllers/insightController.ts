@@ -6,7 +6,7 @@ export async function getInsights(req: Request, res: Response) {
   const repo = req.query.repo;
   if (!repo) {
     return res.status(400).json({
-      erro: "Query repo obrigatória"
+      error: "Campo 'repo' é obrigatório"
     });
   }
 
