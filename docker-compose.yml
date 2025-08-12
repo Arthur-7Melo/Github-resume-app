@@ -1,0 +1,47 @@
+services:
+  mongo:
+    image: mongo:6.0
+    command: ["mongod", "--quiet", "--logpath", "/dev/null"]
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27018:27017"
+
+  collector:
+    build: ./collector
+    env_file:
+      - ./collector/.env
+    depends_on:
+      - mongo
+    ports:
+      - "8000:8000"
+
+  insights:
+    build: ./insights-service
+    env_file:
+      - ./insights-service/.env
+    depends_on:
+      - mongo
+    ports:
+      - "4000:4000"
+
+  gateway:
+    build: ./api-gateway
+    env_file:
+      - ./api-gateway/.env
+    depends_on:
+      - collector
+      - insights
+    ports:
+      - "5000:5000"
+
+  client:
+    build: ./client
+    depends_on:
+      - gateway
+    ports:
+      - "5173:80"
+    
+volumes:
+  mongo_data:
