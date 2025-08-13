@@ -64,6 +64,13 @@ jobs:
         run: |
           npm ci
 
+      - name: Create .env for Insights tests
+        working-directory: .
+        run: |
+          cat > insights-service/.env <<'EOF'
+          # Test env for CI (fake key, safe for tests)
+          GROQ_API_KEY=fake-key-for-ci-tests
+
       - name: Run Insights tests
         working-directory: ./insights-service
         run: |
