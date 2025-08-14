@@ -2,6 +2,8 @@ import express from 'express';
 import insightRouter from './routes/insightRouter';
 import collecorRouter from './routes/collectorRouter';
 import cors from 'cors'
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
 
 const app = express();
 
@@ -15,5 +17,12 @@ app.use(cors({
 app.use(express.json());
 app.use("/insights", insightRouter);
 app.use("/collect", collecorRouter);
+
+const swaggerDocument = YAML.load('./openapi.yaml');
+app.use(
+  '/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument)
+);
 
 export default app;

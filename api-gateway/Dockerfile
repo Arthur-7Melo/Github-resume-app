@@ -17,5 +17,7 @@ RUN npm ci --production
 
 COPY --from=builder /app/dist ./dist
 
+COPY openapi.yaml ./openapi.yaml
+
 EXPOSE 5000
 CMD ["node", "dist/server.js"]

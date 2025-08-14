@@ -1,0 +1,204 @@
+openapi: 3.0.1
+info:
+  title: Gerador de insights Github
+  version: 1.0.0
+  description:  |
+    Gateway que coordena e faz proxy de Collector e Insights-service.
+
+    Documentação dos endpoints disponíveis:
+      - `Collector: POST /collector` (proxy para http://localhost:8000/collector)
+      - `Insights:  GET /insights`  (proxy para http://localhost:4000/insights)
+      
+servers:
+  - url: http://localhost:5000
+    description: Servidor local (API Gateway)
+
+tags:
+  - name: Collector
+    description: Endpoints que disparam a coleta de métricas do repositório
+  - name: Insights
+    description: Endpoints que retornam insights gerados a partir dos snapshots
+
+components:
+  parameters:
+    repoQuery:
+      name: repo
+      in: query
+      required: true
+      schema:
+        type: string
+        example: Arthur-7Melo/Portfolio
+      description: owner/repo do GitHub (ex: `owner/repo`)
+
+  schemas:
+    LanguageStat:
+      type: object
+      properties:
+        name:
+          type: string
+          example: JavaScript
+        bytes:
+          type: integer
+          example: 13222
+        pct:
+          type: number
+          format: float
+          example: 97.8
+      required: [name, bytes, pct]
+
+    Snapshot:
+      type: object
+      properties:
+        repo:
+          type: string
+          example: Arthur-7Melo/Portfolio
+        fetchedAt:
+          type: string
+          format: date-time
+          example: 2025-08-12T14:40:31.461450Z
+        top_languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/LanguageStat'
+        commits_last_week:
+          type: integer
+          example: 2
+        stars:
+          type: integer
+          example: 0
+      required: [repo, fetchedAt, top_languages, commits_last_week, stars]
+
+    CollectResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        repo:
+          type: string
+          example: Arthur-7Melo/Portfolio
+        insertedAt:
+          type: string
+          format: date-time
+          example: 2025-08-12T14:40:31.461450Z
+      required: [status, repo, insertedAt]
+
+    InsightsResponse:
+      allOf:
+        - $ref: '#/components/schemas/Snapshot'
+        - type: object
+          properties:
+            insights:
+              type: string
+              example: "O repositório Arthur-7Melo/Portfolio apresenta domínio em JavaScript..."
+          required: [insights]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Campo 'repo' é obrigatório"
+
+paths:
+  /collector:
+    post:
+      tags:
+        - Collector
+      summary: Dispara a coleta de métricas para um repositório GitHub
+      description: >
+        Faz proxy para o Collector Service (FastAPI). Insere snapshot no banco e retorna confirmação.
+      parameters:
+        - $ref: '#/components/parameters/repoQuery'
+      responses:
+        "200":
+          description: Snapshot inserido com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectResponse'
+              examples:
+                sucesso:
+                  value:
+                    status: "ok"
+                    repo: "Arthur-7Melo/Portfolio"
+                    insertedAt: "2025-08-12T14:40:31.461450Z"
+        "400":
+          description: Requisição inválida (ex.: repo ausente ou erro GitHub)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                falta_repo:
+                  value: { error: "Campo 'repo' é obrigatório" }
+        "500":
+          description: Erro interno/proxy com Collector
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                erro_proxy:
+                  value: { error: "Erro no Collector Service" }
+
+  /insights:
+    get:
+      tags:
+        - Insights
+      summary: Retorna o último snapshot e o texto de insights para um repositório
+      description: >
+        Faz proxy para o Insights Service e devolve o snapshot mais recente com texto gerado pelo modelo.
+      parameters:
+        - $ref: '#/components/parameters/repoQuery'
+      responses:
+        "200":
+          description: Snapshot com insights
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightsResponse'
+              examples:
+                sucesso:
+                  value:
+                    repo: "Arthur-7Melo/Portfolio"
+                    fetchedAt: "2025-08-12T14:40:31.461450Z"
+                    top_languages:
+                      - name: "JavaScript"
+                        bytes: 13222
+                        pct: 97.8
+                      - name: "HTML"
+                        bytes: 280
+                        pct: 2.1
+                    commits_last_week: 2
+                    stars: 0
+                    insights: "O repositório apresenta forte foco em JavaScript..."
+        "400":
+          description: Requisição inválida (repo ausente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                falta_repo:
+                  value: { error: "Campo 'repo' é obrigatório" }
+        "404":
+          description: Nenhum snapshot encontrado para esse repo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  value: { error: "Nenhum Snapshot encontrado para esse repo" }
+        "500":
+          description: Erro interno / falha ao gerar insights
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                erro_modelo:
+                  value: { error: "Falha ao gerar insights: resposta inválida do modelo" }
+
+components: {} # reservado para futuras extensões
