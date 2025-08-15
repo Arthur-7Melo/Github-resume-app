@@ -29,8 +29,9 @@ export default function Form({ onSubmit }) {
         <button
           className="
         bg-blue-600 text-white px-4 py-2 rounded
-        hover:bg-blue-700 hover:shadow-lg
+        hover:bg-blue-700
         cursor-pointer transition duration-200
+        tranform hover:scale-105
       "
         >
           Gerar

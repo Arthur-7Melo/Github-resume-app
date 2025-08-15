@@ -35,7 +35,7 @@ function App() {
           <Form onSubmit={fetchInsights} />
 
           {loading && (
-            <p className="text-gray-500">Carregando dados...</p>
+            <p className="text-gray-500 loading-dots">Carregando dados</p>
           )}
 
           {error && (
